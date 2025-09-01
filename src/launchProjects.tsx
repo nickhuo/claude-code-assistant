@@ -63,49 +63,49 @@ const loadProjects = async (): Promise<ProjectInfo[]> => {
 };
 
 const parseProject = async (projectDir: string, encodedDirName: string): Promise<ProjectInfo | null> => {
-    try {
-      // Get all .jsonl files in the project directory
-      const files = await readdir(projectDir);
-      const jsonlFiles = files.filter((file) => file.endsWith(".jsonl"));
+  try {
+    // Get all .jsonl files in the project directory
+    const files = await readdir(projectDir);
+    const jsonlFiles = files.filter((file) => file.endsWith(".jsonl"));
 
-      if (jsonlFiles.length === 0) {
-        return null;
-      }
-
-      // Sort by modification time, newest first
-      const fileStats = await Promise.all(
-        jsonlFiles.map(async (file) => {
-          const filePath = path.join(projectDir, file);
-          const stats = await stat(filePath);
-          return { file, mtime: stats.mtime, path: filePath };
-        }),
-      );
-
-      fileStats.sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
-
-      // Try to extract project path from the most recent .jsonl file
-      for (const { path: filePath, mtime } of fileStats) {
-        const projectPath = await extractProjectPath(filePath);
-        if (projectPath) {
-          const projectName = path.basename(projectPath);
-          const exists = existsSync(projectPath);
-
-          return {
-            name: projectName,
-            path: projectPath,
-            lastActivity: mtime,
-            exists,
-            encodedDirName,
-          };
-        }
-      }
-
-      return null;
-    } catch (err) {
-      console.error(`Failed to parse project ${encodedDirName}:`, err);
+    if (jsonlFiles.length === 0) {
       return null;
     }
-  };
+
+    // Sort by modification time, newest first
+    const fileStats = await Promise.all(
+      jsonlFiles.map(async (file) => {
+        const filePath = path.join(projectDir, file);
+        const stats = await stat(filePath);
+        return { file, mtime: stats.mtime, path: filePath };
+      }),
+    );
+
+    fileStats.sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+
+    // Try to extract project path from the most recent .jsonl file
+    for (const { path: filePath, mtime } of fileStats) {
+      const projectPath = await extractProjectPath(filePath);
+      if (projectPath) {
+        const projectName = path.basename(projectPath);
+        const exists = existsSync(projectPath);
+
+        return {
+          name: projectName,
+          path: projectPath,
+          lastActivity: mtime,
+          exists,
+          encodedDirName,
+        };
+      }
+    }
+
+    return null;
+  } catch (err) {
+    console.error(`Failed to parse project ${encodedDirName}:`, err);
+    return null;
+  }
+};
 
 const extractProjectPath = async (jsonlFilePath: string): Promise<string | null> => {
   try {
@@ -145,10 +145,7 @@ export default function LaunchClaudeProjects() {
           icon="⚠️"
           actions={
             <ActionPanel>
-              <Action
-                title="Retry"
-                onAction={revalidate}
-              />
+              <Action title="Retry" onAction={revalidate} />
               <Action.OpenInBrowser
                 title="Claude Code Documentation"
                 url="https://docs.anthropic.com/en/docs/claude-code"
